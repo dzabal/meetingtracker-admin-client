@@ -1,0 +1,23 @@
+MEETINGTRACKER CLIENT - SOLICITUD DE NUEVA ITERACION
+
+Tipo: paquete de instrucciones y ejemplos, no parche ejecutable.
+Base requerida: candidato ClientV0.4.2.1 corregido y compilado.
+
+Contenido:
+- INSTRUCTIONS.md
+- MANIFEST.txt
+- VALIDATION-REQUIRED.txt
+- docs/ARCHITECTURE-GLOBAL-OPERATIONS.txt
+- docs/ACTIONS-AND-SCOPES.txt
+- docs/ACCEPTANCE-CRITERIA.txt
+- examples/src/App.integration.example.tsx
+- examples/src/pages/GlobalOperationsPage.example.tsx
+- examples/src/features/GlobalActionForm.example.tsx
+- examples/src/components/GlobalOperationRow.example.tsx
+- examples/src/types/global-operations.example.ts
+
+Los archivos example son referencias de estructura. El equipo debe adaptar los
+imports y tipos a la base, no copiarlos como un proyecto nuevo.
+- docs/KNOWN-DEFECTS-CORRECTION-PLAYBOOK.txt
+- docs/EFFECTIVE-SCHEDULE-RENDERING.txt
+- examples/src/components/EffectiveScheduleCard.example.tsx

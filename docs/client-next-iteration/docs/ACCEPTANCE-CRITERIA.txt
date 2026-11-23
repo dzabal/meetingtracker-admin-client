@@ -1,0 +1,24 @@
+1. El Catálogo es informativo y no conserva estado operativo.
+2. Existe una vista de primer nivel llamada Operaciones globales.
+3. La vista contiene cuatro renglones: Día académico, Sección, Expediente y Pipeline.
+4. Las diez acciones aparecen en un solo renglón correcto.
+5. App mantiene un único GlobalOperationSelection.
+6. OperationsPage no declara useState local para action o date.
+7. Las acciones MEETING_CASE se deshabilitan sin expediente.
+8. Cada acción construye sus parámetros específicos.
+9. Cada scope usa el endpoint correspondiente.
+10. request_id y process_run_id se muestran por separado.
+11. Idempotency-Key se conserva en reintentos técnicos sin cambios.
+12. Confirmar hace exactamente un POST y se bloquea mientras busy=true.
+13. Cancelar no hace POST.
+14. App.tsx no contiene createRoot y exporta App una vez.
+15. Los archivos fuente están formateados y legibles.
+16. npm ci termina con código 0.
+17. npm run generate:api termina con código 0.
+18. npx tsc -b --pretty false termina con código 0.
+19. npm run build termina con código 0.
+20. VALIDATION-REQUIRED.txt contiene salidas reales y matriz de diez acciones.
+21. No se reemplazan OpenAPI, SHA, admin-api.d.ts, client.ts o main.tsx.
+22. Horario efectivo no presenta JSON crudo.
+23. El expediente no tiene desplazamiento horizontal por UUID o JSON.
+24. No existe error CORS en http://127.0.0.1:5173.

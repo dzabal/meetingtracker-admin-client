@@ -1,0 +1,104 @@
+MEETINGTRACKER CLIENT
+PLAYBOOK OBLIGATORIO DE DEFECTOS CONOCIDOS
+
+Este documento debe revisarse antes de compilar cualquier ZIP entregado.
+
+1. APP.TSX Y PUNTO DE ENTRADA
+
+Rechazar o corregir si App.tsx contiene:
+- import { createRoot } from 'react-dom/client'
+- createRoot(document.getElementById('root')!).render(<App/>)
+
+Requisito:
+- createRoot solamente en src/main.tsx
+- App.tsx termina con exactamente un export default App;
+
+2. OPENAPI Y TIPOS
+
+No aceptar un OpenAPI distinto del autorizado:
+- tamaño: 33247 bytes
+- SHA-256: af61acb2bd06c3b304104ecef8552a6682fc2a128576ea45993c1c6a8963815d
+
+No aceptar admin-api.d.ts manual, resumido ni basado en openapi-admin-v3.json.
+El archivo debe regenerarse mediante npm run generate:api y tener estructura paths y components.
+Tamaño de referencia actual: 51681 bytes.
+
+3. GLOBALACTIONFORM: ERRORES REPETIDOS
+
+A. masterSessionId no puede declararse dos veces en Props.
+
+B. Payload debe cerrar parameters y payload.
+Incorrecto:
+:{operation:op,maximum_jobs:max};
+Correcto:
+:{operation:op,maximum_jobs:max}};
+
+C. reason no puede usar null.
+Incorrecto:
+reason: reason || null
+Correcto:
+reason: reason.trim() || undefined
+
+D. No usar variables inexistentes.
+Incorrecto:
+executeMeetingCaseAction(..., p, key)
+Correcto:
+executeMeetingCaseAction(..., payload, key)
+
+E. Confirmar debe ejecutar submit.
+<button type="button" onClick={submit} disabled={busy}>Confirmar</button>
+
+F. Cancelar no puede causar submit.
+<button type="button" onClick={onCancel}>Cancelar</button>
+
+G. JSX debe cerrar return y función.
+return (
+  <section>...</section>
+);
+}
+
+H. No entregar TypeScript minificado en una o tres líneas.
+
+4. ESTADO Y NAVEGACION
+
+Defecto anterior:
+open={(action) => { setView('operations'); }}
+
+La acción se descartaba y Operaciones creaba action/date locales.
+
+Requisito:
+- Catálogo informativo.
+- Operaciones globales administra selección.
+- Un solo GlobalOperationSelection en App.
+- OperationsPage no crea estados paralelos de action o date.
+
+5. DISPATCH
+
+- MEETING_CASE -> executeMeetingCaseAction
+- SECTION -> executeSectionAction
+- DATE -> executeAcademicDayAction
+- PIPELINE -> executePipelineAction
+
+Validar target antes del POST.
+
+6. IDEMPOTENCIA
+
+No crear una UUID nueva en cada reintento.
+Conservar Idempotency-Key mientras no cambien acción, target, fecha o parámetros.
+Bloquear doble clic durante busy=true.
+
+7. HORARIO EFECTIVO
+
+No usar JSON.stringify(effective_schedule) en el resumen.
+Usar EffectiveScheduleCard y mostrar campos legibles.
+JSON completo únicamente dentro de details plegable.
+
+8. VALIDACION AUTOMATICA
+
+Antes de entregar:
+- npm ci
+- npm run generate:api
+- npx tsc -b --pretty false
+- npm run build
+
+Todos deben terminar con código 0.

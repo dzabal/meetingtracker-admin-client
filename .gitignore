@@ -1,0 +1,26 @@
+﻿node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.local
+*.log
+*.tsbuildinfo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Diagnósticos y respaldos locales
+*.before-*.txt
+*.inspect.txt
+admin-api.team-delivery.d.ts
+GlobalActionForm.inspect.txt
+
+# Credenciales y certificados
+*.pem
+*.key
+*.pfx
+*.p12
+secrets/
+credentials/

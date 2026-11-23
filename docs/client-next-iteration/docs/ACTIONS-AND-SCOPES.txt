@@ -1,0 +1,21 @@
+DATE
+- VALIDATE_ACADEMIC_DAY
+- ENQUEUE_ATTENDANCE_BY_DATE
+- SYNC_RECORDINGS_BY_DATE
+- PROCESS_ACADEMIC_DAY
+Endpoint: POST /api/admin/v1/academic-days/{processing_date}/actions
+
+SECTION
+- AUDIT_SECTION_MEETINGS
+- ASSIGN_SECTION_INSTRUCTOR
+Endpoint: POST /api/admin/v1/sections/{academic_period}/{section_code}/actions
+
+MEETING_CASE
+- SYNC_MEETING_INSTRUCTOR
+- RECONCILE_MEETING_COORGANIZERS
+- RECONCILE_SUPPORT_COORGANIZERS
+Endpoint: POST /api/admin/v1/meeting-cases/{master_session_id}/actions
+
+PIPELINE
+- RUN_ACADEMIC_PIPELINE
+Endpoint: POST /api/admin/v1/pipeline/{processing_date}/actions

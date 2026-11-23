@@ -1,0 +1,222 @@
+MEETINGTRACKER ADMIN CLIENT
+ESPECIFICACION DE ARQUITECTURA: ESPACIO DE OPERACIONES GLOBALES
+
+Base: ClientV0.4.2.1 corregido
+Objetivo: separar Catalogo, Acciones de expediente y Operaciones globales.
+
+1. DIAGNOSTICO CONFIRMADO
+
+El Catalogo llama actualmente:
+
+open={(action) => { setView('operations'); }}
+
+La accion recibida se descarta. No se ejecuta setSelectedAction(action), no se
+conserva scope y no se transfiere target.
+
+Operations crea ademas estados locales independientes:
+
+const [action, setAction] = useState();
+const [date, setDate] = useState(today);
+
+Por eso, al abrir cualquier accion desde Catalogo, la pagina Operaciones cae
+siempre en Dia academico y action permanece undefined.
+
+2. DECISION DE ARQUITECTURA
+
+El Catalogo sera informativo, no sera el lanzador principal.
+
+Catalogo muestra:
+- action_code
+- label
+- scope
+- implemented
+- enabled
+- blocked_by
+- mutates_data
+- requires_reason
+- prioridad
+
+El Catalogo no debe mostrar un boton por cada accion como flujo principal.
+Puede incluir un enlace secundario "Ir a Operaciones globales", sin ejecutar ni
+seleccionar automaticamente una accion.
+
+3. NUEVO ESPACIO: OPERACIONES GLOBALES
+
+Crear una seccion independiente de primer nivel llamada:
+
+Operaciones globales
+
+Con cuatro renglones o grupos funcionales:
+
+A. DIA ACADEMICO
+- VALIDATE_ACADEMIC_DAY
+- ENQUEUE_ATTENDANCE_BY_DATE
+- SYNC_RECORDINGS_BY_DATE
+- PROCESS_ACADEMIC_DAY
+
+Target:
+- processing_date
+
+B. SECCION
+- AUDIT_SECTION_MEETINGS
+- ASSIGN_SECTION_INSTRUCTOR
+
+Target:
+- academic_period
+- section_code completo
+
+C. EXPEDIENTE / REUNION
+- SYNC_MEETING_INSTRUCTOR
+- RECONCILE_MEETING_COORGANIZERS
+- RECONCILE_SUPPORT_COORGANIZERS
+
+Target:
+- master_session_id
+- academic_period
+- section_code
+- session_number
+
+Estas acciones solo se habilitan cuando existe un expediente seleccionado. Si
+no existe, mostrar "Seleccione un expediente" y un enlace a Bandeja.
+
+D. PIPELINE
+- RUN_ACADEMIC_PIPELINE
+
+Target:
+- processing_date
+- exactamente un step por solicitud
+
+4. MODELO DE ESTADO UNICO
+
+App debe mantener un solo estado compartido:
+
+type GlobalOperationSelection = {
+  action: ActionDef | null;
+  scope: 'MEETING_CASE' | 'SECTION' | 'DATE' | 'PIPELINE' | null;
+  processingDate: string;
+  masterSessionId?: string;
+  academicPeriod?: string;
+  sectionCode?: string;
+  sessionNumber?: number;
+};
+
+Estados recomendados:
+
+const [globalSelection, setGlobalSelection] = useState<GlobalOperationSelection>(...);
+const [view, setView] = useState(...);
+
+Operations no debe crear otro useState local para action ni otro date local.
+Debe recibir selection y callbacks desde App.
+
+5. FLUJO DE SELECCION
+
+Operaciones globales muestra los cuatro grupos.
+
+Al seleccionar una accion:
+
+setGlobalSelection(current => ({
+  ...current,
+  action,
+  scope: action.scope,
+}));
+
+GlobalActionForm recibe:
+
+<GlobalActionForm
+  action={globalSelection.action}
+  date={globalSelection.processingDate}
+  section={
+    globalSelection.academicPeriod && globalSelection.sectionCode
+      ? {
+          period: globalSelection.academicPeriod,
+          code: globalSelection.sectionCode,
+        }
+      : undefined
+  }
+  masterSessionId={globalSelection.masterSessionId}
+  sessionNumber={globalSelection.sessionNumber}
+  ...
+/>
+
+6. ACCIONES DEL EXPEDIENTE
+
+Las acciones historicas contextuales permanecen dentro del drawer Expediente.
+
+Las tres operaciones globales MEETING_CASE pueden aparecer tambien dentro del
+renglon Expediente de Operaciones globales, pero usan el mismo
+master_session_id seleccionado.
+
+No duplicar logica de payload. Ambos lugares deben abrir el mismo
+GlobalActionForm con el mismo objeto selection.
+
+7. VALIDACION POR RENG LON
+
+DIA ACADEMICO:
+- fecha obligatoria
+
+SECCION:
+- periodo obligatorio
+- codigo completo obligatorio
+
+EXPEDIENTE:
+- master_session_id obligatorio
+- periodo, seccion y sesion precargados
+
+PIPELINE:
+- fecha obligatoria
+- un step por solicitud
+
+Una accion se habilita solo si:
+- implemented === true
+- enabled === true
+- blocked_by vacio
+- target requerido completo
+
+8. OPERACIONESPAGE
+
+OperationsPage debe ser presentacional. No debe crear estados paralelos de
+accion o fecha.
+
+Props recomendadas:
+
+type OperationsPageProps = {
+  catalog: ActionDef[];
+  selection: GlobalOperationSelection;
+  onSelectionChange: (selection: GlobalOperationSelection) => void;
+  selectedCase?: CaseDetail;
+  operations: Operation[];
+  onOperationCompleted: (operation: Operation) => void;
+};
+
+9. MONITOR
+
+El monitor por request_id permanece separado debajo de los cuatro renglones.
+
+- request_id consulta /operations/{request_id}
+- process_run_id se muestra como dato distinto
+
+10. CORRECCION DE HORARIO EFECTIVO
+
+Eliminar JSON.stringify del resumen principal.
+Renderizar campos legibles y conservar JSON completo solo en details.
+
+11. CORRECCION CORS
+
+Usar uno:
+- backend permite http://127.0.0.1:5173 y http://localhost:5173; o
+- proxy Vite /api y cliente con rutas relativas.
+
+No usar mode:no-cors.
+
+12. CRITERIOS DE ACEPTACION
+
+- Catalogo informa estado, no controla el contexto operativo.
+- Operaciones globales contiene cuatro renglones.
+- Las diez acciones aparecen una sola vez dentro del renglon correcto.
+- Seleccionar una accion conserva action, scope y target.
+- Cambiar de accion no reinicia la fecha salvo que el usuario la cambie.
+- Operations no crea estados locales duplicados para action/date.
+- MEETING_CASE no se habilita sin expediente.
+- SECTION no se habilita sin periodo y codigo.
+- Cada scope usa su endpoint correcto.
+- TypeScript y build terminan con codigo 0.

@@ -1,0 +1,16 @@
+LA ENTREGA DEBE INCLUIR VALIDATION-VNEXT.txt CON:
+
+- npm ci: PASS y resumen real
+- npm run generate:api: PASS y resumen real
+- npx tsc -b --pretty false: PASS
+- npm run build: PASS
+- SHA-256 del OpenAPI usado
+- tamaño de admin-api.d.ts
+- createRoot: solo main.tsx
+- export default App: exactamente uno
+- CORS: solución usada y prueba
+
+MATRIZ OBLIGATORIA:
+action_code | scope | renglón | target | formulario | endpoint | preview probado | resultado
+
+Los diez action_code deben figurar. No escribir PASS si la prueba no fue ejecutada.

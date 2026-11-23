@@ -1,0 +1,32 @@
+HORARIO EFECTIVO - REQUISITO DE PRESENTACION
+
+PROHIBIDO en el resumen principal:
+JSON.stringify(effective_schedule)
+
+OBLIGATORIO:
+- sesión
+- asignatura/subject
+- fecha
+- hora original
+- hora efectiva
+- duración en minutos
+- cambio aprobado
+- regla de 24 horas
+- solicitado por
+- aprobado por
+- motivo
+
+Cuando un valor falte, mostrar "No disponible". No mostrar undefined, null ni
+objetos como [object Object].
+
+El JSON completo puede aparecer únicamente dentro de:
+<details><summary>Datos técnicos</summary>...</details>
+
+CSS mínimo:
+.effective-schedule { min-width: 0; }
+.effective-schedule-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+.effective-schedule dd, .effective-schedule pre { overflow-wrap:anywhere; word-break:break-word; }
+.effective-schedule pre { white-space:pre-wrap; max-width:100%; overflow:auto; }
+
+El panel Expediente operativo no debe presentar desplazamiento horizontal por
+UUID, JSON ni cadenas técnicas.
