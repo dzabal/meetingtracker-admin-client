@@ -1,0 +1,10 @@
+Base: authorized meetingtracker-admin-client repository, branch feat/client-vnext-global-operations
+Modified/new files:
+src/App.tsx
+src/api/client.ts (relative API base required by authorized Vite proxy)
+src/pages/OperationsPage.tsx
+src/vite.config.ts (proxy /api -> http://127.0.0.1:8000; indispensable CORS correction)
+src/components/EffectiveScheduleCard.tsx
+src/types-global-operations.ts
+VALIDATION-VNEXT.txt
+No OpenAPI, SHA, generated types, main.tsx, package files or secrets included.

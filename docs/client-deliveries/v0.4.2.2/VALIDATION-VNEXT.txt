@@ -1,0 +1,26 @@
+ClientVNext validation
+Base: authorized public repository candidate, branch feat/client-vnext-global-operations
+
+npm ci: PASS (exit 0)
+npm run generate:api: PASS (exit 0)
+npx tsc -b --pretty false: PASS (exit 0)
+npm run build: PASS (exit 0)
+
+OpenAPI SHA-256: af61acb2bd06c3b304104ecef8552a6682fc2a128576ea45993c1c6a8963815d
+admin-api.d.ts size: 51681 bytes
+createRoot: only src/main.tsx
+App default export: exactly one
+CORS: Vite dev proxy /api -> http://127.0.0.1:8000; client API base defaults to relative path. No mode:no-cors.
+
+Action matrix:
+action_code | scope | row | target | form | endpoint | preview tested | result
+VALIDATE_ACADEMIC_DAY | DATE | Día académico | processing_date | GlobalActionForm | POST /api/admin/v1/academic-days/{date}/actions | not run (backend not attached) | UI dispatch implemented
+ENQUEUE_ATTENDANCE_BY_DATE | DATE | Día académico | processing_date | GlobalActionForm | POST /api/admin/v1/academic-days/{date}/actions | not run (backend not attached) | UI dispatch implemented
+SYNC_RECORDINGS_BY_DATE | DATE | Día académico | processing_date | GlobalActionForm | POST /api/admin/v1/academic-days/{date}/actions | not run (backend not attached) | UI dispatch implemented
+PROCESS_ACADEMIC_DAY | DATE | Día académico | processing_date | GlobalActionForm | POST /api/admin/v1/academic-days/{date}/actions | not run (backend not attached) | UI dispatch implemented
+AUDIT_SECTION_MEETINGS | SECTION | Sección | academic_period, section_code | GlobalActionForm | POST /api/admin/v1/sections/{period}/{section}/actions | not run (backend not attached) | UI dispatch implemented
+ASSIGN_SECTION_INSTRUCTOR | SECTION | Sección | academic_period, section_code | GlobalActionForm | POST /api/admin/v1/sections/{period}/{section}/actions | not run (backend not attached) | UI dispatch implemented
+SYNC_MEETING_INSTRUCTOR | MEETING_CASE | Expediente | master_session_id, academic_period, section_code, session_number | GlobalActionForm | POST /api/admin/v1/meeting-cases/{id}/actions | not run (backend not attached) | UI dispatch implemented
+RECONCILE_MEETING_COORGANIZERS | MEETING_CASE | Expediente | master_session_id, academic_period, section_code, session_number | GlobalActionForm | POST /api/admin/v1/meeting-cases/{id}/actions | not run (backend not attached) | UI dispatch implemented
+RECONCILE_SUPPORT_COORGANIZERS | MEETING_CASE | Expediente | master_session_id, academic_period, section_code, session_number | GlobalActionForm | POST /api/admin/v1/meeting-cases/{id}/actions | not run (backend not attached) | UI dispatch implemented
+RUN_ACADEMIC_PIPELINE | PIPELINE | Pipeline | processing_date, one step | GlobalActionForm | POST /api/admin/v1/pipeline/{date}/actions | not run (backend not attached) | UI dispatch implemented

@@ -1,0 +1,506 @@
+MEETINGTRACKER ADMIN CLIENT
+REVISION TECNICA DEL ENTREGABLE CLIENT V0.4.2.2
+
+Documento para incorporar al repositorio publico y remitir al equipo implementador.
+Fecha de revision: 2026-11-23
+Entregable analizado: 4toCli actualizado, carpeta ClientV0.4.2.2
+Base esperada: repositorio publico meetingtracker-admin-client
+Rama declarada por el equipo: feat/client-vnext-global-operations
+
+======================================================================
+1. DECISION DE REVISION
+======================================================================
+
+Estado general: ACEPTACION PARCIAL, NO APTO TODAVIA PARA MERGE A main.
+
+La entrega mejora correctamente la arquitectura general del cliente, resuelve la
+separacion entre Catalogo y Operaciones globales, incorpora un estado compartido,
+propone el proxy Vite para /api y presenta Horario efectivo como campos legibles.
+
+Sin embargo, la entrega no completa el flujo funcional de las diez operaciones.
+Las acciones SECTION y MEETING_CASE quedan bloqueadas porque academicPeriod no se
+adquiere ni puede introducirse, GlobalActionForm no forma parte del parche y no
+recibe scope ni sessionNumber, no existen formularios especificos completos y no
+se ejecutaron previews contra el backend.
+
+No aplicar este parche directamente sobre main. Integrarlo primero en una rama de
+revision y corregir los puntos marcados como NO CUMPLE.
+
+======================================================================
+2. ARCHIVOS RECIBIDOS EN CLIENT V0.4.2.2
+======================================================================
+
+- IMPLEMENTATION-VNEXT-PATCH.md
+- MANIFEST-VNEXT.txt
+- VALIDATION-VNEXT.txt
+- vite.config.ts
+- src/App.tsx
+- src/types-global-operations.ts
+- src/api/client.ts
+- src/components/EffectiveScheduleCard.tsx
+- src/pages/OperationsPage.tsx
+
+Archivos relevantes NO incluidos:
+
+- src/features/GlobalActionForm.tsx
+- src/styles.css, si se requieren estilos nuevos para los componentes incorporados
+
+======================================================================
+3. MATRIZ DE CUMPLIMIENTO
+======================================================================
+
+[SI CUMPLE] Catalogo informativo
+
+Evidencia recibida:
+- src/App.tsx contiene un Catalog que presenta code, scope, tipo de operacion y
+  estado de implementacion.
+- El Catalogo indica que la ejecucion corresponde a Operaciones globales.
+
+Resultado esperado:
+- Mantener el Catalogo como inventario informativo.
+- No usar el Catalogo como lanzador principal de cada accion.
+
+Referencia funcional:
+- docs/client-next-iteration/docs/ARCHITECTURE-GLOBAL-OPERATIONS.txt
+- docs/client-next-iteration/examples/src/App.integration.example.tsx
+
+---------------------------------------------------------------------
+[SI CUMPLE] Vista independiente Operaciones globales
+
+Evidencia recibida:
+- src/App.tsx agrega la opcion Operaciones globales.
+- src/pages/OperationsPage.tsx recibe catalog, selection,
+  onSelectionChange, selectedCase, adminKey, operator, operations,
+  onPoll y onCompleted.
+
+Resultado esperado:
+- Conservar esta separacion.
+
+Referencia funcional:
+- docs/client-next-iteration/examples/src/pages/GlobalOperationsPage.example.tsx
+
+---------------------------------------------------------------------
+[SI CUMPLE] Estado compartido basico
+
+Evidencia recibida:
+- src/types-global-operations.ts define GlobalOperationSelection.
+- src/App.tsx conserva selection en el nivel superior.
+- OperationsPage no declara un useState local separado para action o date.
+
+Resultado esperado:
+- Mantener un unico estado compartido para action, scope y target.
+
+Referencia funcional:
+- docs/client-next-iteration/examples/src/types/global-operations.example.ts
+- docs/client-next-iteration/examples/src/App.integration.example.tsx
+
+---------------------------------------------------------------------
+[SI CUMPLE] Distribucion inicial de las diez acciones
+
+Evidencia recibida:
+- src/types-global-operations.ts incluye ACTIONS_BY_SCOPE.
+- Se agrupan acciones DATE, SECTION, MEETING_CASE y PIPELINE.
+
+Resultado esperado:
+- Conservar la matriz, pero validar tambien que action.scope coincida con el
+  renglón donde se presenta.
+
+Referencia funcional:
+- docs/client-next-iteration/docs/ACTIONS-AND-SCOPES.txt
+
+---------------------------------------------------------------------
+[SI CUMPLE] Solucion CORS para desarrollo
+
+Evidencia recibida:
+- vite.config.ts configura /api hacia http://127.0.0.1:8000.
+- src/api/client.ts usa base relativa cuando VITE_API_BASE_URL no existe.
+- No usa mode: no-cors.
+
+Resultado esperado:
+- Conservar proxy Vite.
+- Mantener rutas relativas /api/admin/v1/...
+- Documentar las modificaciones de vite.config.ts y src/api/client.ts.
+
+Referencia funcional:
+- vite.config.ts de la entrega, despues de formatearlo.
+
+---------------------------------------------------------------------
+[SI CUMPLE] Horario efectivo legible
+
+Evidencia recibida:
+- src/components/EffectiveScheduleCard.tsx presenta campos etiquetados.
+- El JSON completo queda dentro de details > Datos tecnicos.
+- src/App.tsx utiliza EffectiveScheduleCard en el expediente.
+
+Resultado esperado:
+- Conservar el componente.
+- Verificar estilos para min-width: 0, overflow-wrap: anywhere,
+  word-break: break-word y pre con white-space: pre-wrap.
+- No volver a mostrar el JSON como contenido principal.
+
+Referencia funcional:
+- docs/client-next-iteration/docs/EFFECTIVE-SCHEDULE-RENDERING.txt
+- docs/client-next-iteration/examples/src/components/EffectiveScheduleCard.example.tsx
+
+---------------------------------------------------------------------
+[CUMPLE PARCIAL] Monitor de operaciones
+
+Evidencia recibida:
+- OperationsPage presenta request_id y process_run_id como valores separados.
+- Incluye accion Consultar por request_id.
+
+Pendiente:
+- Validar respuestas reales del backend.
+- Comprobar estados PENDING, PROCESSING, COMPLETED y FAILED.
+- No usar process_run_id para consultar el endpoint de operations.
+
+---------------------------------------------------------------------
+[NO CUMPLE] Adquisicion de academicPeriod
+
+Evidencia recibida:
+- Al abrir una fila de la bandeja, src/App.tsx asigna masterSessionId,
+  sectionCode y sessionNumber.
+- No existe asignacion de academicPeriod.
+- OperationsPage exige academicPeriod para SECTION y MEETING_CASE.
+
+Impacto:
+- Las dos acciones SECTION permanecen deshabilitadas.
+- Las tres acciones MEETING_CASE permanecen deshabilitadas.
+
+Correccion obligatoria:
+1. Obtener el detalle real mediante GET
+   /api/admin/v1/meeting-cases/{master_session_id}.
+2. Normalizar los aliases reales, sin derivaciones arbitrarias:
+   - academic_period o periodo_academico
+   - section_code o codigo_seccion
+   - session_number o sesion
+   - master_session_id
+3. Guardar el resultado en GlobalOperationSelection.
+
+Referencia funcional:
+- docs/client-next-iteration/examples/src/App.integration.example.tsx
+- docs/client-next-iteration/examples/src/types/global-operations.example.ts
+
+Ejemplo esperado:
+
+function resolveMeetingCaseTarget(detail: Record<string, unknown>) {
+  const academicPeriod =
+    detail.academic_period ?? detail.periodo_academico;
+  const sectionCode =
+    detail.section_code ?? detail.codigo_seccion;
+  const sessionNumber =
+    detail.session_number ?? detail.sesion;
+
+  if (
+    typeof detail.master_session_id !== "string" ||
+    typeof academicPeriod !== "string" ||
+    typeof sectionCode !== "string" ||
+    typeof sessionNumber !== "number"
+  ) {
+    throw new Error(
+      "El expediente no contiene el target academico completo.",
+    );
+  }
+
+  return {
+    masterSessionId: detail.master_session_id,
+    academicPeriod,
+    sectionCode,
+    sessionNumber,
+  };
+}
+
+---------------------------------------------------------------------
+[NO CUMPLE] Controles para target SECTION
+
+Evidencia recibida:
+- OperationsPage muestra el texto Periodo y Seccion.
+- No ofrece inputs, selectores ni otro mecanismo para establecerlos.
+
+Impacto:
+- El operador no puede ejecutar AUDIT_SECTION_MEETINGS ni
+  ASSIGN_SECTION_INSTRUCTOR sin un target precargado.
+
+Correccion obligatoria:
+- Agregar controles de academic_period y section_code en el renglón SECTION,
+  o un selector de secciones suministrado por el backend.
+- Conservar el codigo completo de seccion.
+- No inferir academic_period cortando section_code.
+
+Referencia funcional:
+- docs/client-next-iteration/examples/src/pages/GlobalOperationsPage.example.tsx
+
+---------------------------------------------------------------------
+[NO CUMPLE] GlobalActionForm actualizado no fue entregado
+
+Evidencia recibida:
+- OperationsPage importa ../features/GlobalActionForm.
+- ClientV0.4.2.2 no incluye src/features/GlobalActionForm.tsx.
+- Por tanto, la entrega depende del formulario anterior de la base.
+
+Impacto:
+- No se demuestran formularios especificos para las diez acciones.
+- Persisten riesgos de payload generico.
+- No se demuestra idempotencia estable por intencion.
+
+Correccion obligatoria:
+- Incluir src/features/GlobalActionForm.tsx en la proxima entrega.
+- Implementar payload especifico por action_code.
+- Validar target y parametros antes de enviar.
+- Mantener preview antes de mutaciones.
+- Mantener reason obligatorio para operaciones mutantes.
+- Conservar una Idempotency-Key estable durante reintentos tecnicos de la misma
+  intencion.
+
+Referencia funcional:
+- docs/client-next-iteration/examples/src/features/GlobalActionForm.example.tsx
+- docs/client-next-iteration/docs/KNOWN-DEFECTS-CORRECTION-PLAYBOOK.txt
+
+---------------------------------------------------------------------
+[NO CUMPLE] scope no se entrega a GlobalActionForm
+
+Evidencia recibida:
+- selection.scope existe.
+- OperationsPage llama GlobalActionForm sin prop scope.
+
+Impacto:
+- El formulario debe volver a inferir el endpoint por codigo o por presencia de
+  campos opcionales.
+- Se rompe el principio de despacho explicito por scope.
+
+Correccion obligatoria:
+- Agregar scope={selection.scope}.
+- Despachar exclusivamente mediante:
+  MEETING_CASE -> executeMeetingCaseAction
+  SECTION      -> executeSectionAction
+  DATE         -> executeAcademicDayAction
+  PIPELINE     -> executePipelineAction
+
+---------------------------------------------------------------------
+[NO CUMPLE] sessionNumber no se entrega a GlobalActionForm
+
+Evidencia recibida:
+- GlobalOperationSelection contiene sessionNumber.
+- OperationsPage no pasa sessionNumber al formulario.
+
+Impacto:
+- SYNC_MEETING_INSTRUCTOR,
+  RECONCILE_MEETING_COORGANIZERS y
+  RECONCILE_SUPPORT_COORGANIZERS no reciben el numero de sesion.
+
+Correccion obligatoria:
+- Agregar sessionNumber={selection.sessionNumber}.
+- Incluir session_number en el payload cuando el contrato de la accion lo exija.
+
+---------------------------------------------------------------------
+[NO CUMPLE] Validacion combinada action.scope + matriz local
+
+Evidencia recibida:
+- OperationsPage filtra solamente por ACTIONS_BY_SCOPE[scope].includes(a.code).
+
+Impacto:
+- Si el backend informa un scope diferente, el cliente lo ignora.
+
+Correccion obligatoria:
+
+catalog.filter(
+  action =>
+    action.scope === scope &&
+    ACTIONS_BY_SCOPE[scope].includes(action.code),
+);
+
+Si existe discrepancia, mostrar una advertencia de contrato y deshabilitar la
+accion. No corregir silenciosamente el scope devuelto por el backend.
+
+---------------------------------------------------------------------
+[NO CUMPLE] Fuentes minificadas
+
+Archivos afectados:
+- src/App.tsx
+- src/api/client.ts
+- src/pages/OperationsPage.tsx
+- src/components/EffectiveScheduleCard.tsx
+- src/types-global-operations.ts
+- vite.config.ts
+
+Impacto:
+- Revision manual innecesariamente dificil.
+- Mayor riesgo de errores al aplicar parches.
+- Incumplimiento del playbook entregado.
+
+Correccion obligatoria:
+- Entregar archivos TypeScript y configuracion formateados.
+- Usar Prettier o formato equivalente antes del commit.
+- No entregar componentes completos en una sola linea.
+
+Referencia funcional:
+- docs/client-next-iteration/docs/KNOWN-DEFECTS-CORRECTION-PLAYBOOK.txt
+
+---------------------------------------------------------------------
+[NO CUMPLE] Error en MANIFEST-VNEXT.txt
+
+Evidencia recibida:
+- El manifiesto declara src/vite.config.ts.
+- El archivo real esta en la raiz: vite.config.ts.
+
+Correccion obligatoria:
+- Corregir el manifiesto.
+- Enumerar exactamente archivos nuevos y modificados.
+
+---------------------------------------------------------------------
+[NO CUMPLE] Pruebas funcionales contra backend
+
+Evidencia recibida:
+- VALIDATION-VNEXT.txt declara que los previews no fueron ejecutados porque el
+  backend no estaba conectado.
+
+Impacto:
+- El build no demuestra que endpoints, headers, payloads y targets sean correctos.
+
+Correccion obligatoria:
+- Ejecutar pruebas seguras con el backend local en http://127.0.0.1:8000.
+- Probar estos modos:
+  VALIDATE_ACADEMIC_DAY -> validacion
+  AUDIT_SECTION_MEETINGS -> include_graph=false
+  ASSIGN_SECTION_INSTRUCTOR -> PREVIEW
+  SYNC_MEETING_INSTRUCTOR -> PREVIEW
+  RECONCILE_MEETING_COORGANIZERS -> PREVIEW
+  RECONCILE_SUPPORT_COORGANIZERS -> PREVIEW
+  ENQUEUE_ATTENDANCE_BY_DATE -> PREVIEW
+  SYNC_RECORDINGS_BY_DATE -> PREVIEW
+  PROCESS_ACADEMIC_DAY -> PREVIEW_ATTENDANCE
+  RUN_ACADEMIC_PIPELINE -> VALIDATE
+- No ejecutar APPLY, ENQUEUE ni PROCESS durante la validacion inicial.
+- Registrar URL, action_code, scope, target, payload, HTTP status, request_id y
+  process_run_id cuando corresponda.
+
+======================================================================
+4. LLAMADA ESPERADA A GLOBALACTIONFORM
+======================================================================
+
+La integracion debe pasar todas las propiedades de contexto:
+
+<GlobalActionForm
+  action={selection.action}
+  scope={selection.scope}
+  date={selection.processingDate}
+  section={
+    selection.academicPeriod && selection.sectionCode
+      ? {
+          period: selection.academicPeriod,
+          code: selection.sectionCode,
+        }
+      : undefined
+  }
+  masterSessionId={selection.masterSessionId}
+  sessionNumber={selection.sessionNumber}
+  adminKey={adminKey}
+  operator={operator}
+  onCancel={...}
+  onCompleted={...}
+/>
+
+GlobalActionForm debe definir tipos explicitos para estas propiedades y no debe
+inferir scope por heuristicas.
+
+======================================================================
+5. ARCHIVOS QUE PUEDEN INCORPORARSE COMO REFERENCIA EN EL REPOSITORIO
+======================================================================
+
+Conservar el entregable original sin mezclarlo con src/, por ejemplo:
+
+docs/client-deliveries/v0.4.2.2/
+  IMPLEMENTATION-VNEXT-PATCH.md
+  MANIFEST-VNEXT.txt
+  VALIDATION-VNEXT.txt
+  vite.config.ts
+  src/App.tsx
+  src/types-global-operations.ts
+  src/api/client.ts
+  src/components/EffectiveScheduleCard.tsx
+  src/pages/OperationsPage.tsx
+
+Agregar esta revision en:
+
+docs/client-reviews/CLIENT-V0.4.2.2-TECHNICAL-REVIEW.txt
+
+IMPORTANTE:
+- No copiar automaticamente esos archivos a la raiz ni a src/ del baseline.
+- No reemplazar main.
+- El entregable recibido se conserva como evidencia historica y referencia.
+- Las correcciones deben presentarse en una rama nueva mediante Pull Request.
+
+======================================================================
+6. REFERENCIAS FUNCIONALES AUTORIZADAS
+======================================================================
+
+Usar como referencias de implementacion:
+
+- docs/client-next-iteration/INSTRUCTIONS.md
+- docs/client-next-iteration/docs/ARCHITECTURE-GLOBAL-OPERATIONS.txt
+- docs/client-next-iteration/docs/ACTIONS-AND-SCOPES.txt
+- docs/client-next-iteration/docs/EFFECTIVE-SCHEDULE-RENDERING.txt
+- docs/client-next-iteration/docs/KNOWN-DEFECTS-CORRECTION-PLAYBOOK.txt
+- docs/client-next-iteration/docs/ACCEPTANCE-CRITERIA.txt
+- docs/client-next-iteration/examples/src/App.integration.example.tsx
+- docs/client-next-iteration/examples/src/types/global-operations.example.ts
+- docs/client-next-iteration/examples/src/pages/GlobalOperationsPage.example.tsx
+- docs/client-next-iteration/examples/src/features/GlobalActionForm.example.tsx
+- docs/client-next-iteration/examples/src/components/EffectiveScheduleCard.example.tsx
+
+Las referencias funcionales no sustituyen el contrato OpenAPI autorizado.
+
+Contrato protegido:
+- docs/admin-api/openapi-admin-v1.json
+- tamaño esperado: 33247 bytes
+- SHA-256:
+  af61acb2bd06c3b304104ecef8552a6682fc2a128576ea45993c1c6a8963815d
+- src/api/admin-api.d.ts se genera mediante npm run generate:api.
+
+======================================================================
+7. VALIDACION REQUERIDA PARA LA PROXIMA ENTREGA
+======================================================================
+
+La proxima entrega debe incluir resultados reales de:
+
+npm ci
+npm run generate:api
+npx tsc -b --pretty false
+npm run build
+
+Ademas, debe incluir:
+
+- MANIFEST-VNEXT.txt corregido.
+- VALIDATION-VNEXT.txt actualizado.
+- Matriz de las diez acciones.
+- Evidencia de previews reales.
+- Confirmacion de que source files no estan minificados.
+- Confirmacion de que SECTION y MEETING_CASE se habilitan con targets reales.
+- Confirmacion de que Horario efectivo se presenta como campos y no como JSON.
+
+======================================================================
+8. CRITERIO DE ACEPTACION
+======================================================================
+
+La siguiente entrega podra aprobarse solo si:
+
+1. Las diez acciones aparecen en el renglón correcto.
+2. action.scope coincide con la matriz local.
+3. DATE y PIPELINE usan processing_date.
+4. SECTION permite seleccionar academic_period y section_code.
+5. MEETING_CASE obtiene master_session_id, academic_period, section_code y
+   session_number desde el expediente real.
+6. GlobalActionForm recibe scope y sessionNumber.
+7. GlobalActionForm construye payload especifico por accion.
+8. Las mutaciones exigen reason y preview previo.
+9. Idempotency-Key se conserva durante reintentos de la misma intencion.
+10. request_id y process_run_id se mantienen separados.
+11. Horario efectivo se muestra mediante campos legibles.
+12. No aparece JSON crudo como resumen principal.
+13. No existe desplazamiento horizontal causado por contenido tecnico.
+14. TypeScript y Vite build terminan con codigo 0.
+15. Los previews seguros se ejecutan contra el backend.
+16. Ningun archivo protegido es sustituido.
+17. Los archivos fuente se entregan formateados.
+
+FIN DEL DOCUMENTO
