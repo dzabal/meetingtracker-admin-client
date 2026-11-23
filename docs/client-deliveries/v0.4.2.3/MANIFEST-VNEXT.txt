@@ -1,0 +1,12 @@
+Base: updated public repository candidate c19ba5a
+Version: corrected next iteration
+Modified/new files:
+src/App.tsx
+src/features/GlobalActionForm.tsx
+src/pages/OperationsPage.tsx
+src/types-global-operations.ts
+src/components/EffectiveScheduleCard.tsx
+vite.config.ts
+VALIDATION-VNEXT.txt
+IMPLEMENTATION-VNEXT-PATCH.md
+No protected API/OpenAPI/main/package files included in patch.

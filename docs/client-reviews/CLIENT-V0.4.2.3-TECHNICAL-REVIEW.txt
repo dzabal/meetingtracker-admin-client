@@ -1,0 +1,238 @@
+MEETINGTRACKER ADMIN CLIENT
+REVISION TECNICA CLIENT V0.4.2.3
+
+DICTAMEN
+
+Estado: RECHAZO TECNICO CONTROLADO. NO HACER MERGE A main.
+Valoracion: es la entrega mas completa hasta ahora y corrige buena parte de V0.4.2.2, pero el paquete entregado contiene defectos estructurales verificables que contradicen VALIDATION-VNEXT.txt.
+
+CUMPLIMIENTOS CONFIRMADOS
+
+1. App mantiene un GlobalOperationSelection compartido.
+2. openCase consulta el detalle y normaliza academic_period/periodo_academico, section_code/codigo_seccion y session_number/sesion.
+3. OperationsPage valida action.scope junto con ACTIONS_BY_SCOPE.
+4. OperationsPage transmite scope y sessionNumber a GlobalActionForm.
+5. GlobalActionForm se incluye en el parche.
+6. GlobalActionForm construye payloads diferenciados para las diez acciones.
+7. El despacho se realiza explicitamente por scope.
+8. Se usa useRef para conservar Idempotency-Key durante reintentos de la misma instancia del formulario.
+9. EffectiveScheduleCard conserva presentacion estructurada y datos tecnicos plegables.
+10. El OpenAPI autorizado no se incluye dentro de ClientV0.4.2.3.
+
+BLOQUEOS CONFIRMADOS
+
+1. RUTAS DE IMPORTACION INVALIDAS EN GlobalActionForm.tsx
+
+Archivo entregado:
+src/features/GlobalActionForm.tsx
+
+Importaciones recibidas:
+../../api/client
+../types-global-operations
+
+Desde src/features/ las rutas correctas son:
+../api/client
+../types-global-operations
+
+La primera ruta recibida sube dos niveles y apunta fuera de src. Esto debe impedir la compilacion en la estructura autorizada.
+
+2. VITE CONFIG ENTREGADO EN RUTA INCORRECTA
+
+El manifiesto declara:
+vite.config.ts
+
+El ZIP contiene:
+src/vite.config.ts
+
+Vite carga vite.config.ts desde la raiz del proyecto. src/vite.config.ts no reemplaza la configuracion raiz.
+
+3. PROXY CORS AUSENTE
+
+El archivo src/vite.config.ts recibido solo contiene plugins:[react()]. No contiene server.proxy para /api hacia http://127.0.0.1:8000.
+
+Esto contradice IMPLEMENTATION-VNEXT-PATCH.md y VALIDATION-VNEXT.txt, que afirman que el proxy autorizado esta implementado.
+
+Configuracion minima requerida en la raiz:
+
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    host: "127.0.0.1",
+    port: 5173,
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+      },
+    },
+  },
+});
+
+4. FORMULARIOS VISUALES NO IMPLEMENTADOS
+
+GlobalActionForm declara estado para:
+- operation
+- maximum
+- onlyIssues
+- includeGraph
+- instructorName
+- instructorUpn
+- removeProvisional
+- roleCode
+
+Sin embargo, el JSX incluye el comentario:
+"El cliente final debe renderizar aqui los controles especificos indicados en INSTRUCTIONS.md."
+
+No se renderizan los controles requeridos. El usuario no puede cambiar operation, maximum, onlyIssues, includeGraph, instructorName, instructorUpn, removeProvisional ni roleCode.
+
+Consecuencias:
+- ASSIGN_SECTION_INSTRUCTOR envia instructor_name e instructor_upn vacios.
+- Las acciones mutantes quedan en PREVIEW porque no existe selector de operation.
+- Los limites y opciones quedan fijados a valores iniciales invisibles.
+- No existe formulario visible y especifico para cada accion.
+
+5. CONTROLES SECTION SIGUEN AUSENTES
+
+OperationsPage muestra academicPeriod y sectionCode, pero no ofrece inputs ni selector para establecerlos. Las acciones SECTION dependen de haber abierto previamente un expediente con periodo valido.
+
+El requisito era permitir seleccionar o introducir explicitamente academic_period y section_code en el renglon SECTION.
+
+6. VALIDATION-VNEXT.txt NO ES CONFIABLE COMO EVIDENCIA DE ESTA CARPETA
+
+El documento declara:
+- TypeScript PASS
+- build PASS
+- proxy Vite autorizado
+
+Pero el paquete contiene:
+- una importacion ../../api/client incompatible con src/features/GlobalActionForm.tsx;
+- vite.config.ts en src y sin proxy.
+
+Por tanto, la validacion pudo ejecutarse sobre otra copia del repositorio o antes de empaquetar estos archivos. Se requiere volver a ejecutar la validacion despues de superponer exactamente ClientV0.4.2.3 sobre una rama limpia.
+
+7. PREVIEWS REALES NO EJECUTADOS
+
+VALIDATION-VNEXT.txt confirma que no hubo backend disponible. No hay evidencia HTTP de endpoints, payloads, request_id ni process_run_id.
+
+CORRECCIONES MINIMAS PARA V0.4.2.4
+
+1. Corregir import de GlobalActionForm:
+   ../api/client
+   ../types-global-operations
+2. Entregar vite.config.ts en la raiz, no en src.
+3. Restaurar proxy /api -> http://127.0.0.1:8000.
+4. Renderizar controles especificos para las diez acciones.
+5. Agregar controles o selector para academic_period y section_code.
+6. Formatear los archivos restantes que siguen en una sola linea.
+7. Ejecutar npm ci, generate:api, tsc y build sobre exactamente el paquete final.
+8. Adjuntar salida real de git diff --name-only y hashes de los archivos entregados.
+9. Ejecutar previews seguros contra el backend.
+
+DECISION DE REPOSITORIO
+
+Incorporar ClientV0.4.2.3 solamente como evidencia en:
+docs/client-deliveries/v0.4.2.3/
+
+Incorporar esta revision en:
+docs/client-reviews/CLIENT-V0.4.2.3-TECHNICAL-REVIEW.txt
+
+No copiar los archivos recibidos sobre src/ activo y no hacer merge a main.
+
+
+======================================================================
+9. BACKEND Y ENTORNO DE VALIDACION AUTORIZADO
+======================================================================
+
+La ruta del backend SI debe documentarse desde ahora. El equipo necesita conocerla
+antes de compilar y probar el cliente, porque vite.config.ts, las rutas relativas y
+los previews dependen de esta decision.
+
+Entorno local autorizado:
+
+Backend directo:
+http://127.0.0.1:8000
+
+Cliente Vite:
+http://127.0.0.1:5173
+
+Rutas consumidas por el navegador:
+/api/admin/v1/...
+
+Proxy requerido en vite.config.ts, ubicado en la raiz del proyecto:
+
+/api -> http://127.0.0.1:8000
+
+Configuracion esperada:
+
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    host: "127.0.0.1",
+    port: 5173,
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+      },
+    },
+  },
+});
+
+Reglas:
+
+1. src/api/client.ts debe consumir rutas relativas /api/admin/v1/...
+2. VITE_API_BASE_URL puede admitirse como override de despliegue, pero el valor
+   predeterminado para desarrollo debe permitir el proxy relativo.
+3. No usar mode: "no-cors".
+4. No incluir ADMIN_API_KEY, tokens, credenciales ni .env en el repositorio.
+5. La clave administrativa se introduce localmente durante las pruebas.
+6. El endpoint de produccion no se codifica de forma fija en el cliente.
+7. Si el backend local no esta disponible, el equipo puede compilar, pero no puede
+   declarar previews funcionales como PASS.
+8. Antes del merge, el equipo debe validar contra el backend local autorizado o
+   coordinar un entorno de integracion equivalente.
+
+Por que se entrega ahora:
+
+- La compilacion no necesita un backend activo, pero la configuracion del proxy si
+  forma parte del codigo que debe compilarse.
+- Las pruebas de endpoints y payloads requieren conocer el backend antes de cerrar
+  el entregable.
+- Posponer esta informacion produciria otra entrega compilada pero sin validacion
+  funcional, que es precisamente el problema observado en V0.4.2.2 y V0.4.2.3.
+
+No se proporciona en este documento:
+
+- ADMIN_API_KEY real
+- credenciales de Microsoft Graph
+- DATABASE_URL
+- credenciales de Supabase
+- tokens o secretos
+
+======================================================================
+10. SECUENCIA DE TRABAJO EXIGIDA AL EQUIPO
+======================================================================
+
+1. Crear una rama desde el main actualizado del repositorio publico.
+2. Aplicar las correcciones marcadas como obligatorias.
+3. Mantener el Catalogo informativo y Operaciones globales separado.
+4. Ejecutar:
+   npm ci
+   npm run generate:api
+   npx tsc -b --pretty false
+   npm run build
+5. Iniciar:
+   npm run dev -- --host 127.0.0.1 --port 5173
+6. Validar el proxy contra http://127.0.0.1:8000.
+7. Ejecutar los diez previews seguros.
+8. Actualizar VALIDATION-VNEXT.txt con evidencia real.
+9. Entregar MANIFEST-VNEXT.txt con rutas exactas.
+10. Crear Pull Request; no hacer push directo a main.
+
+FIN
